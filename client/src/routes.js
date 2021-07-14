@@ -12,14 +12,17 @@ import AppointmentList from './pages/AppointmentList';
 import AppointmentDetail from './pages/AppointmentDetail';
 import UserDashboard from './pages/User';
 import NotFound from './pages/Page404';
-
+import { useAuthState } from './context/Context';
 // ----------------------------------------------------------------------
 
 export default function Router() {
+  const user = useAuthState();
+  console.log(user);
   return useRoutes([
     {
       path: '/dashboard',
-      element: <DashboardLayout />,
+      element:
+        user.token && user.userDetails === 'admin' ? <DashboardLayout /> : <Navigate to="/login" />,
       children: [
         { path: '/', element: <Navigate to="/dashboard/app" replace /> },
         { path: 'app', element: <DashboardApp /> },
@@ -31,7 +34,12 @@ export default function Router() {
     },
     {
       path: '/user',
-      element: <DashboardLayout isUser />,
+      element:
+        user.token && user.userDetails !== 'admin' ? (
+          <Navigate to="/login" />
+        ) : (
+          <DashboardLayout isUser />
+        ),
       children: [
         { path: '/', element: <Navigate to="/user/dashboard" replace /> },
         { path: 'dashboard', element: <UserDashboard /> }
@@ -39,12 +47,13 @@ export default function Router() {
     },
     {
       path: '/',
-      element: <LogoOnlyLayout />,
+      element: user.token ? <LogoOnlyLayout /> : <Navigate to="/user/dashboard" replace />,
       children: [
+        { path: '/', element: <Navigate to="/login" /> },
         { path: 'login', element: <Login /> },
         { path: 'register', element: <Register /> },
         { path: '404', element: <NotFound /> },
-        { path: '/', element: <Navigate to="/login" /> },
+
         { path: '*', element: <Navigate to="/404" /> }
       ]
     },
